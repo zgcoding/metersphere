@@ -348,15 +348,16 @@ export default {
   },
   methods: {
     getTemplateField() {
-      this.page.result.loading = false;
+      this.page.result.loading = true;
       getProjectMember((data) => {
         this.members = data;
       });
       getTestTemplate()
         .then((template) => {
+          this.page.result.loading = true;
           this.testCaseTemplate = template;
           this.fields = getTableHeaderWithCustomFields('TRACK_TEST_CASE', this.testCaseTemplate.customFields);
-          this.page.result.loading = true;
+          this.page.result.loading = false;
           this.$refs.table.reloadTable();
         });
     },
