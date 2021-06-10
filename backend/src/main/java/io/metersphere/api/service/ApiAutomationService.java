@@ -1034,6 +1034,7 @@ public class ApiAutomationService {
         MsTestPlan testPlan = new MsTestPlan();
         testPlan.setHashTree(new LinkedList<>());
         try {
+            ParameterConfig config = new ParameterConfig();
             boolean isFirst = true;
             SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
             ApiScenarioReportMapper batchMapper = sqlSession.getMapper(ApiScenarioReportMapper.class);
@@ -1075,6 +1076,7 @@ public class ApiAutomationService {
                     scenario.setVariables(variables);
                 }
                 group.setEnableCookieShare(scenario.isEnableCookieShare());
+                group.setOnSampleError(scenario.getOnSampleError());
                 LinkedList<MsTestElement> scenarios = new LinkedList<>();
                 scenarios.add(scenario);
                 // 创建场景报告
@@ -1110,8 +1112,9 @@ public class ApiAutomationService {
                 group.setHashTree(scenarios);
                 testPlan.getHashTree().add(group);
                 isFirst = false;
+                config.setOnSampleError(scenario.getOnSampleError());
             }
-            testPlan.toHashTree(jmeterHashTree, testPlan.getHashTree(), new ParameterConfig());
+            testPlan.toHashTree(jmeterHashTree, testPlan.getHashTree(), config);
             sqlSession.flushStatements();
         } catch (Exception ex) {
             MSException.throwException(ex.getMessage());

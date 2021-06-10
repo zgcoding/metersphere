@@ -36,7 +36,7 @@ public class MsThreadGroup extends MsTestElement {
             cookieManager.setControlledByThread(false);
             groupTree.add(cookieManager);
         }
-
+        onSampleError = config.isOnSampleError();
         if (CollectionUtils.isNotEmpty(hashTree)) {
             for (MsTestElement el : hashTree) {
                 el.toHashTree(groupTree, el.getHashTree(), config);
@@ -66,7 +66,7 @@ public class MsThreadGroup extends MsTestElement {
         threadGroup.setDuration(0);
         threadGroup.setProperty(ThreadGroup.ON_SAMPLE_ERROR, ThreadGroup.ON_SAMPLE_ERROR_CONTINUE);
         threadGroup.setScheduler(false);
-        if (onSampleError) {
+        if (!onSampleError) {
             threadGroup.setProperty("ThreadGroup.on_sample_error", "stoptest");
         }
         threadGroup.setSamplerController(loopController);

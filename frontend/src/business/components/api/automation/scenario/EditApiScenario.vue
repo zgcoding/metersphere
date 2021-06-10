@@ -139,8 +139,8 @@
                                :isReadOnly="scenarioDefinition.length < 1" @showPopover="showPopover"
                                :project-list="projectList" ref="envPopover"/>
                 </el-col>
-                <el-col :span="2" class="ms-col-one ms-font">
-                  <el-checkbox v-model="enableContinues">{{ $t('commons.failure_continues') }}</el-checkbox>
+                <el-col :span="3" class="ms-col-one ms-font">
+                  <el-checkbox v-model="onSampleError">{{ $t('commons.failure_continues') }}</el-checkbox>
                 </el-col>
                 <el-col :span="4">
                   <el-button :disabled="scenarioDefinition.length < 1" size="mini" type="primary" v-prevent-re-click
@@ -219,6 +219,7 @@
 
       <!--执行组件-->
       <ms-run :debug="true" v-if="type!=='detail'" :environment="projectEnvMap" :reportId="reportId"
+              :onSampleError="onSampleError"
               :run-data="debugData"
               @runRefresh="runRefresh" ref="runTest"/>
       <!-- 调试结果 -->
@@ -316,7 +317,7 @@ export default {
   },
   data() {
     return {
-      enableContinues: false,
+      onSampleError: true,
       props: {
         label: "label",
         children: "hashTree"
@@ -388,6 +389,7 @@ export default {
     this.getMaintainerOptions();
     this.getApiScenario();
     this.addListener(); //  添加 ctrl s 监听
+
   },
   directives: {OutsideClick},
   computed: {
@@ -1030,7 +1032,9 @@ export default {
                 if (obj.headers) {
                   this.currentScenario.headers = obj.headers;
                 }
+
                 this.enableCookieShare = obj.enableCookieShare;
+                this.onSampleError = obj.onSampleError;
                 if (obj.hashTree) {
                   obj.hashTree.forEach(item => {
                     if (!item.hashTree) {
@@ -1065,6 +1069,7 @@ export default {
         environmentMap: strMapToObj(this.projectEnvMap),
         hashTree: this.scenarioDefinition,
         projectId: this.projectId,
+        onSampleError: this.onSampleError,
       };
       this.currentScenario.scenarioDefinition = scenario;
       if (this.currentScenario.tags instanceof Array) {
