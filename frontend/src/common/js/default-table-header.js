@@ -143,8 +143,10 @@ export const CUSTOM_TABLE_HEADER = {
     {id: 'createUser', key: '5', label: i18n.t('api_test.creator')},
     {id: 'custom', key: '6', label: i18n.t('api_test.definition.api_last_time')},
     {id: 'tags', key: '7', label: i18n.t('commons.tag')},
-    {id: 'execResult', key: '8', label: '执行状态'},
-    {id: 'maintainer', key: '9', label: i18n.t('api_test.definition.request.responsible')}
+    {id: 'execResult', key: '8', label: i18n.t('test_track.plan.load_case.execution_status')},
+    {id: 'maintainer', key: '9', label: i18n.t('api_test.definition.request.responsible')},
+    {id: 'createTime', key: 'a', label: i18n.t('commons.create_time')}
+
 
   ],
   //测试计划-性能用例
@@ -169,7 +171,8 @@ export const CUSTOM_TABLE_HEADER = {
     {id: 'stepTotal', key: '7', label: i18n.t('api_test.automation.success')},
     {id: 'lastResult', key: '8', label: i18n.t('api_test.automation.fail')},
     {id: 'passRate', key: '9', label: i18n.t('api_test.automation.passing_rate')},
-    {id: 'maintainer', key: 'a', label: i18n.t('api_test.definition.request.responsible')}
+    {id: 'maintainer', key: 'a', label: i18n.t('api_test.definition.request.responsible')},
+    {id: 'createTime', key: 'b', label: i18n.t('commons.create_time')}
   ],
   //测试用例
   TRACK_TEST_CASE: [

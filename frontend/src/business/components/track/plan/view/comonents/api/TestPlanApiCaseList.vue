@@ -31,12 +31,13 @@
             <show-more-btn :is-show="scope.row.showMore && !isReadOnly" :buttons="buttons" :size="selectDataCounts"/>
           </template>
         </el-table-column>
-        <template v-for="(item, index) in tableLabel">
+        <span v-for="(item) in fields" :key="item.key">
+
           <el-table-column v-if="item.id == 'num'" prop="num" sortable="custom" label="ID" min-width="80"
                            show-overflow-tooltip
-                           :key="index"/>
+          />
           <el-table-column v-if="item.id == 'name'" prop="name" sortable="custom" min-width="120"
-                           :label="$t('api_test.definition.api_name')" show-overflow-tooltip :key="index"/>
+                           :label="$t('api_test.definition.api_name')" show-overflow-tooltip/>
 
           <el-table-column
             v-if="item.id == 'priority'"
@@ -47,7 +48,7 @@
             :label="$t('test_track.case.priority')"
             show-overflow-tooltip
             min-width="120"
-            :key="index">
+          >
             <template v-slot:default="scope">
               <priority-table-item :value="scope.row.priority"/>
             </template>
@@ -59,7 +60,7 @@
             prop="path"
             :label="$t('api_test.definition.api_path')"
             show-overflow-tooltip
-            :key="index"/>
+          />
 
           <el-table-column
             v-if="item.id == 'createUser'"
@@ -70,13 +71,12 @@
             :filters="userFilters"
             :label="'创建人'"
             show-overflow-tooltip
-            :key="index"/>
+          />
           <el-table-column
             v-if="item.id == 'maintainer'"
             prop="userId"
             :label="$t('custom_field.case_maintainer')"
             show-overflow-tooltip
-            :key="index"
             min-width="120"
           >
           </el-table-column>
@@ -87,7 +87,7 @@
             min-width="160"
             :label="$t('api_test.definition.api_last_time')"
             prop="updateTime"
-            :key="index">
+          >
             <template v-slot:default="scope">
               <span>{{ scope.row.updateTime | timestampFormatDate }}</span>
             </template>
@@ -98,14 +98,14 @@
             prop="tags"
             min-width="100"
             :label="$t('commons.tag')"
-            :key="index">
+          >
             <template v-slot:default="scope">
               <ms-tag v-for="(itemName,index)  in scope.row.tags" :key="index" type="success" effect="plain"
                       :content="itemName" style="margin-left: 0px; margin-right: 2px"/>
             </template>
           </el-table-column>
 
-          <el-table-column v-if="item.id == 'execResult'" :label="'执行状态'" min-width="150" align="center" :key="index">
+          <el-table-column v-if="item.id == 'execResult'" :label="'执行状态'" min-width="150" align="center">
             <template v-slot:default="scope">
               <div v-loading="rowLoading === scope.row.id">
                 <el-link type="danger"
@@ -124,7 +124,22 @@
               </div>
             </template>
           </el-table-column>
-        </template>
+          <el-table-column
+            v-if="item.id == 'createTime'"
+            sortable
+            prop="createTime"
+            :label="$t('commons.create_time')"
+            min-width="120px"
+            show-overflow-tooltip>
+          <template v-slot:default="scope">
+            <span>{{ scope.row.createTime | timestampFormatDate }}</span>
+          </template>
+        </el-table-column>
+        </span>
+        <ms-custom-table-header
+          :type="fieldKey"
+          @reload="reloadTable"
+          ref="customTableHeader"/>
         <el-table-column fixed="right" min-width="100" v-if="!isReadOnly" :label="$t('commons.operating')">
           <template slot="header">
             <header-label-operate @exec="customHeader"/>
@@ -194,7 +209,7 @@ import {
   _handleSelectAll,
   _sort,
   buildBatchParam,
-  checkTableRowIsSelect, deepClone,
+  checkTableRowIsSelect, deepClone, getCustomTableHeader,
   getLabel,
   getSelectDataCounts,
   setUnSelectIds,
@@ -205,11 +220,13 @@ import {Test_Plan_Api_Case} from "@/business/components/common/model/JsonData";
 import HeaderLabelOperate from "@/business/components/common/head/HeaderLabelOperate";
 import MsTableHeaderSelectPopover from "@/business/components/common/components/table/MsTableHeaderSelectPopover";
 import MsPlanRunMode from "../../../common/PlanRunMode";
+import MsCustomTableHeader from "@/business/components/common/components/table/MsCustomTableHeader";
 
 
 export default {
   name: "TestPlanApiCaseList",
   components: {
+    MsCustomTableHeader,
     BatchEdit,
     HeaderLabelOperate,
     HeaderCustom,
@@ -232,6 +249,8 @@ export default {
   },
   data() {
     return {
+      fieldKey: "TEST_PLAN_API_CASE",
+      fields: getCustomTableHeader("TEST_PLAN_API_CASE"),
       type: TEST_PLAN_API_CASE,
       headerItems: Test_Plan_Api_Case,
       tableLabel: [],
@@ -347,8 +366,14 @@ export default {
   },
   methods: {
     customHeader() {
-      const list = deepClone(this.tableLabel);
-      this.$refs.headerCustom.open(list);
+      this.$refs.customTableHeader.open(this.fields);
+    },
+    reloadTable() {
+      this.fields = getCustomTableHeader(this.fieldKey);
+      this.tableActive = false;
+      this.$nextTick(() => {
+        this.tableActive = true;
+      });
     },
     getMaintainerOptions() {
       this.$post('/user/project/member/tester/list', {projectId: getCurrentProjectID()}, response => {

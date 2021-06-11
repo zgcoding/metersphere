@@ -29,23 +29,23 @@
             <show-more-btn :is-show="scope.row.showMore && !isReadOnly" :buttons="buttons" :size="selectDataCounts"/>
           </template>
         </el-table-column>
-        <template v-for="(item, index) in tableLabel">
-          <el-table-column v-if="item.id == 'num'" prop="num" sortable min-width="80" label="ID" show-overflow-tooltip :key="index"/>
+        <span v-for="(item) in fields" :key="item.key">
+          <el-table-column v-if="item.id == 'num'" prop="num" sortable min-width="80" label="ID" show-overflow-tooltip/>
           <el-table-column
-              v-if="item.id == 'caseName'"
-              prop="caseName"
-              :label="$t('commons.name')"
-              min-width="120"
-              show-overflow-tooltip
-              :key="index">
+            v-if="item.id == 'caseName'"
+            prop="caseName"
+            :label="$t('commons.name')"
+            min-width="120"
+            show-overflow-tooltip
+          >
           </el-table-column>
           <el-table-column
-              v-if="item.id == 'projectName'"
+            v-if="item.id == 'projectName'"
               prop="projectName"
               min-width="120"
               :label="$t('load_test.project_name')"
               show-overflow-tooltip
-              :key="index">
+          >
           </el-table-column>
           <el-table-column
               v-if="item.id == 'userName'"
@@ -53,7 +53,7 @@
               min-width="100"
               :label="$t('load_test.user_name')"
               show-overflow-tooltip
-              :key="index">
+          >
           </el-table-column>
           <el-table-column
               v-if="item.id == 'createTime'"
@@ -61,7 +61,7 @@
               prop="createTime"
               min-width="160"
               :label="$t('commons.create_time')"
-              :key="index">
+          >
             <template v-slot:default="scope">
               <span>{{ scope.row.createTime | timestampFormatDate }}</span>
             </template>
@@ -73,7 +73,7 @@
               :filters="statusFilters"
               :label="$t('commons.status')"
               min-width="80"
-              :key="index">
+          >
             <template v-slot:default="{row}">
               <ms-performance-test-status :row="row"/>
             </template>
@@ -83,7 +83,7 @@
               min-width="100"
               prop="caseStatus"
               :label="$t('test_track.plan.load_case.execution_status')"
-              :key="index">
+          >
             <template v-slot:default="{row}">
               <el-tag size="mini" type="danger" v-if="row.caseStatus === 'error'">
                 {{ row.caseStatus }}
@@ -102,7 +102,7 @@
               :label="$t('test_track.plan.load_case.report')"
               min-width="80"
               show-overflow-tooltip
-              :key="index">
+          >
             <template v-slot:default="scope">
               <div v-loading="loading === scope.row.id">
                 <el-link type="info" @click="getReport(scope.row)" v-if="scope.row.loadReportId">
@@ -112,10 +112,10 @@
               </div>
             </template>
           </el-table-column>
-        </template>
+        </span>
         <el-table-column v-if="!isReadOnly" fixed="right" min-width="100" :label="$t('commons.operating')" >
           <template slot="header">
-            <header-label-operate @exec="customHeader"/>
+            <header-label-operate @exec="openCustomHeader"/>
           </template>
           <template v-slot:default="scope">
             <div>
@@ -132,8 +132,11 @@
           </template>
         </el-table-column>
       </el-table>
-      <header-custom ref="headerCustom" :initTableData="initTable" :optionalFields=headerItems
-                     :type=type></header-custom>
+      <ms-custom-table-header
+        :type="fieldKey"
+        @reload="reloadTable"
+        ref="customTableHeader"/>
+
       <ms-table-pagination :change="initTable" :current-page.sync="currentPage" :page-size.sync="pageSize"
                            :total="total"/>
     </el-card>
@@ -162,7 +165,7 @@ import {
   buildBatchParam,
   initCondition,
   toggleAllSelection,
-  checkTableRowIsSelect, deepClone
+  checkTableRowIsSelect, deepClone, getCustomTableHeader
 } from "@/common/js/tableUtils";
 import HeaderCustom from "@/business/components/common/head/HeaderCustom";
 import {TAPD, TEST_CASE_LIST, TEST_PLAN_LOAD_CASE} from "@/common/js/constants";
@@ -171,10 +174,12 @@ import {getCurrentUser} from "@/common/js/utils";
 import HeaderLabelOperate from "@/business/components/common/head/HeaderLabelOperate";
 import MsTableHeaderSelectPopover from "@/business/components/common/components/table/MsTableHeaderSelectPopover";
 import MsPlanRunMode from "../../../common/PlanRunMode";
+import MsCustomTableHeader from "@/business/components/common/components/table/MsCustomTableHeader";
 
 export default {
   name: "TestPlanLoadCaseList",
   components: {
+    MsCustomTableHeader,
     HeaderLabelOperate,
     HeaderCustom,
     LoadCaseReport,
@@ -188,6 +193,8 @@ export default {
   },
   data() {
     return {
+      fieldKey: "TEST_PLAN_LOAD_CASE",
+      fields: getCustomTableHeader("TEST_PLAN_LOAD_CASE"),
       type: TEST_PLAN_LOAD_CASE,
       headerItems: Test_Plan_Load_Case,
       tableLabel: [],
@@ -292,16 +299,22 @@ export default {
       }
     },
     _runBatch(loadCases) {
-      this.$post('/test/plan/load/case/run/batch',loadCases, response => {
+      this.$post('/test/plan/load/case/run/batch', loadCases, response => {
       });
       this.$success(this.$t('test_track.plan.load_case.exec'));
       this.initTable();
       this.refreshStatus();
     },
 
-    customHeader() {
-      const list = deepClone(this.tableLabel);
-      this.$refs.headerCustom.open(list);
+    openCustomHeader() {
+      this.$refs.customTableHeader.open(this.fields);
+    },
+    reloadTable() {
+      this.fields = getCustomTableHeader(this.fieldKey);
+      this.tableActive = false;
+      this.$nextTick(() => {
+        this.tableActive = true;
+      });
     },
     initTable() {
       this.autoCheckStatus();

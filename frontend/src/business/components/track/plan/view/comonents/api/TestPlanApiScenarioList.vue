@@ -26,28 +26,30 @@
             <show-more-btn :is-show="isSelect(row)" :buttons="buttons" :size="selectDataCounts"/>
           </template>
         </el-table-column>
-        <template v-for="(item, index) in tableLabel">
+        <span v-for="(item) in fields" :key="item.key">
           <el-table-column
             v-if="item.id == 'num'"
             sortable="custom"
             prop="customNum"
             min-width="80px"
             label="ID"
-            :key="index"/>
-          <el-table-column v-if="item.id == 'name'" prop="name" :label="$t('api_test.automation.scenario_name')" min-width="120px"
-                           show-overflow-tooltip :key="index"/>
-          <el-table-column v-if="item.id == 'level'" prop="level" :label="$t('api_test.automation.case_level')" min-width="100px"
+          />
+          <el-table-column v-if="item.id == 'name'" prop="name" :label="$t('api_test.automation.scenario_name')"
+                           min-width="120px"
+                           show-overflow-tooltip/>
+          <el-table-column v-if="item.id == 'level'" prop="level" :label="$t('api_test.automation.case_level')"
+                           min-width="100px"
                            column-key="level"
                            sortable="custom"
                            :filters="LEVEL_FILTERS"
-                           show-overflow-tooltip :key="index">
+                           show-overflow-tooltip>
             <template v-slot:default="scope">
               <priority-table-item :value="scope.row.level" ref="level"/>
             </template>
 
           </el-table-column>
           <el-table-column v-if="item.id == 'tagNames'" prop="tagNames" :label="$t('api_test.automation.tag')"
-                           min-width="100px" :key="index">
+                           min-width="100px">
             <template v-slot:default="scope">
               <ms-tag v-for="(itemName,index) in scope.row.tags" :key="index" type="success" effect="plain"
                       :content="itemName" style="margin-left: 0px; margin-right: 2px"/>
@@ -55,13 +57,12 @@
           </el-table-column>
           <el-table-column v-if="item.id == 'userId'" prop="userId" :label="$t('api_test.automation.creator')"
                            min-width="100px"
-                           show-overflow-tooltip :key="index"/>
+                           show-overflow-tooltip/>
           <el-table-column
             v-if="item.id == 'maintainer'"
             prop="principal"
             :label="$t('custom_field.case_maintainer')"
             show-overflow-tooltip
-            :key="index"
             min-width="120"
           >
           </el-table-column>
@@ -69,17 +70,17 @@
                            prop="updateTime"
                            min-width="120px"
                            sortable="custom"
-                           :label="$t('api_test.automation.update_time')" width="180" :key="index">
+                           :label="$t('api_test.automation.update_time')" width="180">
             <template v-slot:default="scope">
               <span>{{ scope.row.updateTime | timestampFormatDate }}</span>
             </template>
           </el-table-column>
           <el-table-column v-if="item.id == 'stepTotal'" prop="stepTotal" :label="$t('api_test.automation.step')"
                            min-width="80px"
-                           show-overflow-tooltip :key="index"/>
+                           show-overflow-tooltip/>
           <el-table-column v-if="item.id == 'lastResult'" prop="lastResult" min-width="100px"
                            :filters="RESULT_FILTERS"
-                           :label="$t('api_test.automation.last_result')" :key="index">
+                           :label="$t('api_test.automation.last_result')">
             <template v-slot:default="{row}">
               <el-link type="success" @click="showReport(row)" v-if="row.lastResult === 'Success'">
                 {{ $t('api_test.automation.success') }}
@@ -91,8 +92,20 @@
           </el-table-column>
           <el-table-column v-if="item.id == 'passRate'" prop="passRate" min-width="80px"
                            :label="$t('api_test.automation.passing_rate')"
-                           show-overflow-tooltip :key="index"/>
-        </template>
+                           show-overflow-tooltip/>
+          <el-table-column
+            v-if="item.id == 'createTime'"
+            sortable
+            prop="createTime"
+            :label="$t('commons.create_time')"
+            min-width="120px"
+            show-overflow-tooltip>
+            <template v-slot:default="scope">
+              <span>{{ scope.row.createTime | timestampFormatDate }}</span>
+            </template>
+          </el-table-column>
+        </span>
+
         <el-table-column :label="$t('commons.operating')" fixed="right" min-width="100px" v-if="!referenced">
           <template slot="header">
             <header-label-operate @exec="customHeader"/>
@@ -111,6 +124,10 @@
           </template>
         </el-table-column>
       </el-table>
+      <ms-custom-table-header
+        :type="fieldKey"
+        @reload="reloadTable"
+        ref="customTableHeader"/>
       <header-custom ref="headerCustom" :initTableData="search" :optionalFields=headerItems :type=type></header-custom>
       <ms-table-pagination :change="search" :current-page.sync="currentPage" :page-size.sync="pageSize"
                            :total="total"/>
@@ -152,7 +169,7 @@ import {
   initCondition,
   buildBatchParam,
   toggleAllSelection,
-  checkTableRowIsSelect, deepClone
+  checkTableRowIsSelect, deepClone, getCustomTableHeader
 } from "../../../../../../../common/js/tableUtils";
 import MsTableOperatorButton from "../../../../../common/components/MsTableOperatorButton";
 import HeaderCustom from "@/business/components/common/head/HeaderCustom";
@@ -164,10 +181,12 @@ import MsPlanRunMode from "../../../common/PlanRunMode";
 import MsTableHeaderSelectPopover from "@/business/components/common/components/table/MsTableHeaderSelectPopover";
 import PriorityTableItem from "@/business/components/track/common/tableItems/planview/PriorityTableItem";
 import {API_SCENARIO_FILTERS} from "@/common/js/table-constants";
+import MsCustomTableHeader from "@/business/components/common/components/table/MsCustomTableHeader";
 
 export default {
   name: "MsTestPlanApiScenarioList",
   components: {
+    MsCustomTableHeader,
     PriorityTableItem,
     HeaderLabelOperate,
     HeaderCustom,
@@ -197,6 +216,8 @@ export default {
   },
   data() {
     return {
+      fieldKey: "TEST_PLAN_SCENARIO_CASE",
+      fields: getCustomTableHeader("TEST_PLAN_SCENARIO_CASE"),
       type: TEST_PLAN_SCENARIO_CASE,
       headerItems: Test_Plan_Scenario_Case,
       screenHeight: 'calc(100vh - 330px)',//屏幕高度
@@ -257,11 +278,17 @@ export default {
   },
   methods: {
     customHeader() {
-      const list = deepClone(this.tableLabel);
-      this.$refs.headerCustom.open(list);
+      this.$refs.customTableHeader.open(this.fields);
+    },
+    reloadTable() {
+      this.fields = getCustomTableHeader(this.fieldKey);
+      this.tableActive = false;
+      this.$nextTick(() => {
+        this.tableActive = true;
+      });
     },
     search() {
-      initCondition(this.condition,this.condition.selectAll);
+      initCondition(this.condition, this.condition.selectAll);
       this.selectRows = new Set();
       this.loading = true;
       this.condition.moduleIds = this.selectNodeIds;
