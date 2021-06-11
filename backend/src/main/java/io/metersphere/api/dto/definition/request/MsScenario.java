@@ -61,6 +61,7 @@ public class MsScenario extends MsTestElement {
     @JSONField(ordinal = 27)
     private Map<String, String> environmentMap;
 
+    @JSONField(ordinal = 24)
     private Boolean onSampleError;
 
     private static final String BODY_FILE_DIR = FileUtils.BODY_FILE_DIR;
@@ -119,7 +120,7 @@ public class MsScenario extends MsTestElement {
         // 设置共享cookie
         config.setEnableCookieShare(enableCookieShare);
         // 设置是否失败执行
-        config.setOnSampleError(onSampleError);
+        // config.setOnSampleError(onSampleError);
         Map<String, EnvironmentConfig> envConfig = new HashMap<>(16);
         if (config.getConfig() == null) {
             // 兼容历史数据

@@ -36,7 +36,7 @@ public class MsThreadGroup extends MsTestElement {
             cookieManager.setControlledByThread(false);
             groupTree.add(cookieManager);
         }
-        onSampleError = config.isOnSampleError();
+
         if (CollectionUtils.isNotEmpty(hashTree)) {
             for (MsTestElement el : hashTree) {
                 el.toHashTree(groupTree, el.getHashTree(), config);
@@ -54,7 +54,6 @@ public class MsThreadGroup extends MsTestElement {
         loopController.setProperty(TestElement.GUI_CLASS, SaveService.aliasToClass("LoopControlPanel"));
         loopController.setEnabled(this.isEnable());
         loopController.setLoops(1);
-
         ThreadGroup threadGroup = new ThreadGroup();
         threadGroup.setEnabled(this.isEnable());
         threadGroup.setName(this.getName());

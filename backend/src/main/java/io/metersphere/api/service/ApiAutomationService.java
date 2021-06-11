@@ -1034,7 +1034,7 @@ public class ApiAutomationService {
         MsTestPlan testPlan = new MsTestPlan();
         testPlan.setHashTree(new LinkedList<>());
         try {
-            ParameterConfig config = new ParameterConfig();
+            //ParameterConfig config = new ParameterConfig();
             boolean isFirst = true;
             SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
             ApiScenarioReportMapper batchMapper = sqlSession.getMapper(ApiScenarioReportMapper.class);
@@ -1109,12 +1109,13 @@ public class ApiAutomationService {
                     batchMapper.insert(report);
                     reportIds.add(group.getName());
                 }
+
                 group.setHashTree(scenarios);
                 testPlan.getHashTree().add(group);
                 isFirst = false;
-                config.setOnSampleError(scenario.getOnSampleError());
+                //config.setOnSampleError(scenario.getOnSampleError());
             }
-            testPlan.toHashTree(jmeterHashTree, testPlan.getHashTree(), config);
+            testPlan.toHashTree(jmeterHashTree, testPlan.getHashTree(), new ParameterConfig());
             sqlSession.flushStatements();
         } catch (Exception ex) {
             MSException.throwException(ex.getMessage());

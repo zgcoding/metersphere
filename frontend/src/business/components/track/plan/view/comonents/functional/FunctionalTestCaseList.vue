@@ -61,7 +61,7 @@
           :label="$t('commons.id')"
           min-width="120px"
           show-overflow-tooltip
-        >
+          >
         </el-table-column>
         <el-table-column
           v-if="item.id=='name'"

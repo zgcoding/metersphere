@@ -35,7 +35,7 @@
 
           <el-table-column v-if="item.id == 'num'" prop="num" sortable="custom" label="ID" min-width="80"
                            show-overflow-tooltip
-          />
+                           />
           <el-table-column v-if="item.id == 'name'" prop="name" sortable="custom" min-width="120"
                            :label="$t('api_test.definition.api_name')" show-overflow-tooltip/>
 

@@ -219,7 +219,6 @@
 
       <!--执行组件-->
       <ms-run :debug="true" v-if="type!=='detail'" :environment="projectEnvMap" :reportId="reportId"
-              :onSampleError="onSampleError"
               :run-data="debugData"
               @runRefresh="runRefresh" ref="runTest"/>
       <!-- 调试结果 -->
@@ -873,7 +872,8 @@ export default {
                 enableCookieShare: this.enableCookieShare,
                 headers: this.currentScenario.headers,
                 environmentMap: this.projectEnvMap,
-                hashTree: this.scenarioDefinition
+                hashTree: this.scenarioDefinition,
+                onSampleError: this.onSampleError
               };
               this.reportId = getUUID().substring(0, 8);
               // this.editScenario().then(() => {

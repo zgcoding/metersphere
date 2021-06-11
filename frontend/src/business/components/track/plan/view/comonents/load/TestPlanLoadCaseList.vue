@@ -41,10 +41,10 @@
           </el-table-column>
           <el-table-column
             v-if="item.id == 'projectName'"
-              prop="projectName"
-              min-width="120"
-              :label="$t('load_test.project_name')"
-              show-overflow-tooltip
+            prop="projectName"
+            min-width="120"
+            :label="$t('load_test.project_name')"
+            show-overflow-tooltip
           >
           </el-table-column>
           <el-table-column
