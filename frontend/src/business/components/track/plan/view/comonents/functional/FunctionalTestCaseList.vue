@@ -25,7 +25,6 @@
                  :select-ids="new Set(Array.from(this.selectRows).map(row => row.id))" @refresh="initTableData"/>
 
     <el-table
-        :key="updata"
         ref="table"
         class="test-content adjust-table ms-select-all-fixed"
         border
@@ -52,22 +51,23 @@
           <show-more-btn :is-show="scope.row.showMore" :buttons="buttons" :size="selectDataCounts"/>
         </template>
       </el-table-column>
-      <template v-for="(item, index) in tableLabel">
+
+      <span v-for="(item) in fields" :key="item.key">
+
         <el-table-column
-          v-if="item.id == 'num'"
+          v-if="item.id == 'customNum'"
           prop="customNum"
           sortable="custom"
           :label="$t('commons.id')"
           min-width="120px"
           show-overflow-tooltip
-          :key="index">
+        >
         </el-table-column>
         <el-table-column
           v-if="item.id=='name'"
           prop="name"
           :label="$t('commons.name')"
           min-width="120px"
-          :key="index"
           show-overflow-tooltip>
         </el-table-column>
         <el-table-column
@@ -77,7 +77,6 @@
           column-key="priority"
           sortable="custom"
           min-width="120px"
-          :key="index"
           :label="$t('test_track.case.priority')">
           <template v-slot:default="scope">
             <priority-table-item :value="scope.row.priority" ref="priority"/>
@@ -85,11 +84,8 @@
         </el-table-column>
 
         <el-table-column v-if="item.id=='tags'" prop="tags" :label="$t('commons.tag')" min-width="120px"
-                         :key="index">
-          <template v-slot:default="scope">
-            <ms-tag v-for="(tag, index) in scope.row.showTags" :key="tag + '_' + index" type="success" effect="plain"
-                    :content="tag" style="margin-left: 0px; margin-right: 2px"/>
-          </template>
+        >
+
         </el-table-column>
 
         <el-table-column
@@ -97,7 +93,7 @@
           prop="nodePath"
           :label="$t('test_track.case.module')"
           min-width="120px"
-          :key="index"
+
           show-overflow-tooltip>
         </el-table-column>
 
@@ -106,7 +102,7 @@
           prop="projectName"
           :label="$t('test_track.plan.plan_project')"
           min-width="120px"
-          :key="index"
+
           show-overflow-tooltip>
         </el-table-column>
 
@@ -115,7 +111,7 @@
           :label="$t('test_track.issue.issue')"
           min-width="80px"
           show-overflow-tooltip
-          :key="index">
+        >
           <template v-slot:default="scope">
             <el-popover
               placement="right"
@@ -149,20 +145,10 @@
           prop="executorName"
           :filters="executorFilters"
           min-width="100px"
-          :key="index"
           column-key="executor"
           :label="$t('test_track.plan_view.executor')">
         </el-table-column>
-        <!-- 责任人(创建该用例时所关联的责任人) -->
-        <el-table-column
-          v-if="item.id == 'maintainer'"
-          prop="maintainerName"
-          :filters="maintainerFilters"
-          min-width="100px"
-          :key="index"
-          column-key="maintainerName"
-          :label="$t('api_test.definition.request.responsible')">
-        </el-table-column>
+
 
         <el-table-column
           v-if="item.id == 'status'"
@@ -170,7 +156,6 @@
           :filters="statusFilters"
           column-key="status"
           min-width="100px"
-          :key="index"
           :label="$t('test_track.plan_view.execute_result')">
           <template v-slot:default="scope">
             <span @click.stop="clickt = 'stop'">
@@ -206,19 +191,38 @@
           prop="updateTime"
           :label="$t('commons.update_time')"
           min-width="120px"
-          :key="index"
           show-overflow-tooltip>
           <template v-slot:default="scope">
             <span>{{ scope.row.updateTime | timestampFormatDate }}</span>
           </template>
         </el-table-column>
-      </template>
+        <!-- 责任人(创建该用例时所关联的责任人) -->
+        <el-table-column
+          v-if="item.id == 'maintainer'"
+          prop="maintainerName"
+          :filters="maintainerFilters"
+          min-width="100px"
+          column-key="maintainerName"
+          :label="$t('api_test.definition.request.responsible')">
+        </el-table-column>
+        <el-table-column
+          v-if="item.id == 'createTime'"
+          sortable
+          prop="createTime"
+          :label="$t('commons.create_time')"
+          min-width="120px"
+          show-overflow-tooltip>
+          <template v-slot:default="scope">
+            <span>{{ scope.row.createTime | timestampFormatDate }}</span>
+          </template>
+        </el-table-column>
+      </span>
       <el-table-column
         fixed="right"
         min-width="100"
         :label="$t('commons.operating')">
         <template slot="header">
-          <header-label-operate @exec="customHeader"/>
+          <header-label-operate @exec="openCustomHeader"/>
         </template>
         <template v-slot:default="scope">
           <div>
@@ -232,8 +236,13 @@
         </template>
       </el-table-column>
     </el-table>
-    <header-custom ref="headerCustom" :initTableData="initTableData" :optionalFields=headerItems
-                   :type=type></header-custom>
+    <!--    <header-custom ref="headerCustom" :initTableData="initTableData" :optionalFields=headerItems
+                       :type=type></header-custom>-->
+
+    <ms-custom-table-header
+      :type="fieldKey"
+      @reload="reloadTable"
+      ref="customTableHeader"/>
     <ms-table-pagination :change="search" :current-page.sync="currentPage" :page-size.sync="pageSize"
                          :total="total"/>
 
@@ -286,7 +295,7 @@ import {
   _handleSelectAll,
   _sort,
   buildBatchParam,
-  deepClone,
+  deepClone, getCustomTableHeader,
   getLabel,
   getSelectDataCounts,
   initCondition,
@@ -297,10 +306,12 @@ import HeaderCustom from "@/business/components/common/head/HeaderCustom";
 import {Test_Plan_Function_Test_Case} from "@/business/components/common/model/JsonData";
 import HeaderLabelOperate from "@/business/components/common/head/HeaderLabelOperate";
 import MsTableHeaderSelectPopover from "@/business/components/common/components/table/MsTableHeaderSelectPopover";
+import MsCustomTableHeader from "@/business/components/common/components/table/MsCustomTableHeader";
 
 export default {
   name: "FunctionalTestCaseList",
   components: {
+    MsCustomTableHeader,
     HeaderLabelOperate,
     HeaderCustom,
     FunctionalTestCaseEdit,
@@ -315,6 +326,8 @@ export default {
   },
   data() {
     return {
+      fieldKey: "TEST_PLAN_FUNCTION_TEST_CASE",
+      fields: getCustomTableHeader("TEST_PLAN_FUNCTION_TEST_CASE"),
       updata: false,
       type: TEST_PLAN_FUNCTION_TEST_CASE,
       headerItems: Test_Plan_Function_Test_Case,
@@ -410,12 +423,6 @@ export default {
       this.condition.selectAll = false;
       this.search();
     },
-    tableLabel: {
-      handler(newVal) {
-        this.updata = !this.updata;
-      },
-      deep: true
-    }
   },
   mounted() {
     hub.$on("openFailureTestCase", row => {
@@ -431,9 +438,19 @@ export default {
     hub.$off("openFailureTestCase");
   },
   methods: {
-    customHeader() {
-      const list = deepClone(this.tableLabel);
-      this.$refs.headerCustom.open(list);
+    /* customHeader() {
+       const list = deepClone(this.tableLabel);
+       this.$refs.headerCustom.open(list);
+     },*/
+    openCustomHeader() {
+      this.$refs.customTableHeader.open(this.fields);
+    },
+    reloadTable() {
+      this.fields = getCustomTableHeader(this.fieldKey);
+      this.tableActive = false;
+      this.$nextTick(() => {
+        this.tableActive = true;
+      });
     },
 
     initTableData() {
